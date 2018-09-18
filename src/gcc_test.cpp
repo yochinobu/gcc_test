@@ -9,6 +9,7 @@
 /***************************************************************/
 
 #include <iodefine.h>
+#include <vector>
 
 #ifdef CPPAPP
 //Initialize global constructors
@@ -30,9 +31,20 @@ extern void __main()
 }
 #endif 
 
-int main(void) {
+#define NUM 10
 
-    while(1) {
+int main(void) {
+	std::vector<int> a;
+	int b[NUM];
+
+	for(int i = 0; i < NUM; i++){
+		a.push_back(i);
+		b[i] = a[i];
+	}
+
+	for(int i = 0; i < 0; i++);
+
+	while(1) {
 
 	// TODO: add application code here
     }
