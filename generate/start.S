@@ -95,6 +95,7 @@ _PowerON_Reset :
     RTE
     NOP
     NOP
+#define CPPAPP
 #ifdef CPPAPP
     mov    #__rx_init,r7
     jsr    r7
