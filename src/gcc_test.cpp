@@ -39,13 +39,13 @@ int main(void) {
 	int b[NUM];
 	std::array<int, NUM> c;
 
-	for(int i = 0; i < NUM; i++){
+	for(auto i = 0; i < NUM; i++){
 		a.push_back(i);
 		b[i] = a[i];
 		c[i] = a[i];
 	}
 
-	for(int i = 0; i < 0; i++);
+	for(auto i = 0; i < 0; i++);
 
 	while(1) {
 
