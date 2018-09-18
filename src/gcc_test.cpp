@@ -10,6 +10,7 @@
 
 #include <iodefine.h>
 #include <vector>
+#include <array>
 
 #ifdef CPPAPP
 //Initialize global constructors
@@ -36,10 +37,12 @@ extern void __main()
 int main(void) {
 	std::vector<int> a;
 	int b[NUM];
+	std::array<int, NUM> c;
 
 	for(int i = 0; i < NUM; i++){
 		a.push_back(i);
 		b[i] = a[i];
+		c[i] = a[i];
 	}
 
 	for(int i = 0; i < 0; i++);
