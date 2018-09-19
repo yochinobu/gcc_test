@@ -11,6 +11,8 @@
 #include <iodefine.h>
 #include <vector>
 #include <array>
+#include <TUT_BasicSource/header/setup.h>
+#include <Led/Led.h>
 
 #ifdef CPPAPP
 //Initialize global constructors
@@ -35,15 +37,19 @@ extern void __main()
 #define NUM 10
 
 int main(void) {
+	setup();
 	std::vector<int> a;
 	int b[NUM];
 	std::array<int, NUM> c;
+	Led *led = new Led1();
 
 	for(auto i = 0; i < NUM; i++){
 		a.push_back(i);
 		b[i] = a[i];
 		c[i] = a[i];
 	}
+
+	led->output(true);
 
 	for(auto i = 0; i < 0; i++);
 
