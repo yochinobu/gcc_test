@@ -19,8 +19,15 @@
 /*            : 1.80  (2015-04-22)  [Hardware Manual Revision : 1.80]   */
 /*    Date Generated: 25/05/2015                                        */
 /************************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "interrupt_handlers.h"
+
+#ifdef __cplusplus
+}
+#endif
 
 /* INT_Exception(Supervisor Instruction)*/
 void INT_Excep_SuperVisorInst(void){/* brk(); */}
