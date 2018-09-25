@@ -37,13 +37,15 @@ extern void __main()
 
 #define NUM 10
 
+UART *uart_print;
+
 int main(void) {
 	setup();
 	std::vector<int> a;
 	int b[NUM];
 	std::array<int, NUM> c;
 	Led *led = new Led1();
-	UART *uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
+	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
 
 	for(auto i = 0; i < NUM; i++){
 		a.push_back(i);
