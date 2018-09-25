@@ -43,6 +43,11 @@ extern void __main()
 
 UART *uart_print;
 
+void attach(std::function< void() > *function, void (*function_ptr)())
+{
+	*function = function_ptr;
+}
+
 void interrupt_function(){
 	unsigned char data;
 	data = SCI0.RDR;
@@ -56,7 +61,7 @@ int main(void) {
 	std::array<int, NUM> c;
 	Led *led = new Led1();
 	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
-	int_excep_sci0_rxi0 = interrupt_function;
+	attach(&int_excep_sci0_rxi0, interrupt_function);
 
 	for(auto i = 0; i < NUM; i++){
 		a.push_back(i);
