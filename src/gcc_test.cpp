@@ -53,6 +53,7 @@ int main(void) {
 
 	led->output(true);
 	uart_print->Printf("hello, world!\n");
+	uart_print->Printf("thank you, world!\n");
 
 	for(auto i = 0; i < 0; i++);
 
