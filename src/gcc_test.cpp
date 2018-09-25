@@ -13,6 +13,7 @@
 #include <array>
 #include <TUT_BasicSource/header/setup.h>
 #include <Led/Led.h>
+#include <UART/UART0.h>
 
 #ifdef CPPAPP
 //Initialize global constructors
@@ -42,6 +43,7 @@ int main(void) {
 	int b[NUM];
 	std::array<int, NUM> c;
 	Led *led = new Led1();
+	UART *uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
 
 	for(auto i = 0; i < NUM; i++){
 		a.push_back(i);
@@ -50,6 +52,7 @@ int main(void) {
 	}
 
 	led->output(true);
+	uart_print->Printf("hello, world!\n");
 
 	for(auto i = 0; i < 0; i++);
 
