@@ -29,6 +29,8 @@ extern "C" {
 }
 #endif
 
+#include <functional>
+
 /* INT_Exception(Supervisor Instruction)*/
 void INT_Excep_SuperVisorInst(void){/* brk(); */}
 
@@ -549,7 +551,12 @@ void INT_Excep_PDC_PCFEI(void){ }
 void INT_Excep_PDC_PCERI(void){ }
 
 /* SCI0 RXI0*/
-void INT_Excep_SCI0_RXI0(void){ }
+std::function< void() > int_excep_sci0_rxi0;
+void INT_Excep_SCI0_RXI0(void)
+{
+	if(int_excep_sci0_rxi0)
+		int_excep_sci0_rxi0();
+}
 
 /* SCI0 TXI0*/
 void INT_Excep_SCI0_TXI0(void){ }
