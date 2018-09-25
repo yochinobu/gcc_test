@@ -44,6 +44,8 @@ extern void __main()
 UART *uart_print;
 
 void interrupt_function(){
+	unsigned char data;
+	data = SCI0.RDR;
 	uart_print->Printf("again, world\n");
 }
 
