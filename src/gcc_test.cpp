@@ -39,6 +39,10 @@ extern void __main()
 
 UART *uart_print;
 
+void interrupt_function(){
+	uart_print->Printf("again, world\n");
+}
+
 int main(void) {
 	setup();
 	std::vector<int> a;
@@ -46,6 +50,7 @@ int main(void) {
 	std::array<int, NUM> c;
 	Led *led = new Led1();
 	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
+	uart_print->attach_rx_interrupt(interrupt_function);
 
 	for(auto i = 0; i < NUM; i++){
 		a.push_back(i);
