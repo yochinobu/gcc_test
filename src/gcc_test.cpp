@@ -14,6 +14,10 @@
 #include <TUT_BasicSource/header/setup.h>
 #include <Led/Led.h>
 #include <UART/UART0.h>
+#include <functional>
+#include <interrupt_handlers.h>
+
+extern std::function< void() > int_excep_sci0_rxi0;
 
 #ifdef CPPAPP
 //Initialize global constructors
@@ -50,7 +54,7 @@ int main(void) {
 	std::array<int, NUM> c;
 	Led *led = new Led1();
 	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
-	uart_print->attach_rx_interrupt(interrupt_function);
+	int_excep_sci0_rxi0 = interrupt_function;
 
 	for(auto i = 0; i < NUM; i++){
 		a.push_back(i);
