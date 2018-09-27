@@ -559,10 +559,20 @@ void INT_Excep_SCI0_RXI0(void)
 }
 
 /* SCI0 TXI0*/
-void INT_Excep_SCI0_TXI0(void){ }
+std::function< void() > int_excep_sci0_txi0;
+void INT_Excep_SCI0_TXI0(void)
+{
+	if(int_excep_sci0_txi0)
+		int_excep_sci0_txi0();
+}
 
 /* SCI0 TEI0*/
-void INT_Excep_SCI0_TEI0(void){ }
+std::function< void() > int_excep_sci0_tei0;
+void INT_Excep_SCI0_TEI0(void)
+{
+	if(int_excep_sci0_tei0)
+		int_excep_sci0_tei0();
+}
 
 /* SCI1 RXI1*/
 void INT_Excep_SCI1_RXI1(void){ }
