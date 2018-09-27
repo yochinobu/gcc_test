@@ -43,15 +43,17 @@ extern void __main()
 
 UART *uart_print;
 
-void attach(std::function< void() > *function, void (*function_ptr)())
-{
-	*function = function_ptr;
+void interrupt_function_1(){
+	uart_print->Printf("again, world 1\n");
 }
 
-void interrupt_function(){
-	unsigned char data;
-	data = SCI0.RDR;
-	uart_print->Printf("again, world\n");
+void interrupt_function_2(){
+	uart_print->Printf("again, world 2\n");
+}
+
+void interrupt_function_3(){
+	static int count = 0;
+	uart_print->Printf("again, world 3. No:%d\n",count++);
 }
 
 int main(void) {
@@ -61,7 +63,10 @@ int main(void) {
 	std::array<int, NUM> c;
 	Led *led = new Led1();
 	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
-	attach(&int_excep_sci0_rxi0, interrupt_function);
+	uart_print->attach_rx_interrupt(interrupt_function_1);
+	uart_print->attach_rx_interrupt(interrupt_function_2);
+	uart_print->attach_rx_interrupt(interrupt_function_3);
+	uart_print->enable_rx_interrupt();
 
 	for(auto i = 0; i < NUM; i++){
 		a.push_back(i);
