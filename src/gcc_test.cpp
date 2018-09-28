@@ -66,6 +66,7 @@ int main(void) {
 	uart_print->attach_rx_interrupt(interrupt_function_1);
 	uart_print->attach_rx_interrupt(interrupt_function_2);
 	uart_print->attach_rx_interrupt(interrupt_function_3);
+	uart_print->detach_rx_interrupt(interrupt_function_2);
 	uart_print->enable_rx_interrupt();
 
 	for(auto i = 0; i < NUM; i++){
