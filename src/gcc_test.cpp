@@ -64,8 +64,9 @@ int main(void) {
 	Led *led = new Led1();
 	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
 	uart_print->attach_rx_interrupt(interrupt_function_1);
-	uart_print->attach_rx_interrupt(interrupt_function_2);
+	int function_number = uart_print->attach_rx_interrupt(interrupt_function_2);
 	uart_print->attach_rx_interrupt(interrupt_function_3);
+	uart_print->detach_rx_interrupt(function_number);
 	uart_print->enable_rx_interrupt();
 
 	for(auto i = 0; i < NUM; i++){
