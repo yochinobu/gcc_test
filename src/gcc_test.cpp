@@ -14,34 +14,16 @@
 #include <TUT_BasicSource/header/setup.h>
 #include <Led/Led.h>
 #include <UART/UART0.h>
+#include <Cmt/Cmt0.h>
 #include <functional>
 #include <interrupt_handlers.h>
 
 extern std::function< void() > int_excep_sci0_rxi0;
 
-#ifdef CPPAPP
-//Initialize global constructors
-extern void __main()
-{
-  static int initialized;
-  if (! initialized)
-    {
-      typedef void (*pfunc) ();
-      extern pfunc __ctors[];
-      extern pfunc __ctors_end[];
-      pfunc *p;
-
-      initialized = 1;
-      for (p = __ctors_end; p > __ctors; )
-    (*--p) ();
-
-    }
-}
-#endif 
-
 #define NUM 10
 
 UART *uart_print;
+Led2 led2;
 
 void interrupt_function_1(){
 	uart_print->Printf("again, world 1\n");
@@ -56,6 +38,14 @@ void interrupt_function_3(){
 	uart_print->Printf("again, world 3. No:%d\n",count++);
 }
 
+void interrupt_function_4(Led *led){
+	static bool led_state = false;
+	led_state = !led_state;
+	led->output(led_state);
+	led2.output(!led_state);
+	uart_print->Printf("change, world!\n");
+}
+
 int main(void) {
 	setup();
 	std::vector<int> a;
@@ -68,6 +58,10 @@ int main(void) {
 	uart_print->attach_rx_interrupt(interrupt_function_3);
 	uart_print->detach_rx_interrupt(function_number);
 	uart_print->enable_rx_interrupt();
+
+	Cmt *cmt = new Cmt0(1e-4);
+	cmt->attach_interrupt(std::bind(interrupt_function_4, led), 0.5);
+	cmt->run();
 
 	for(auto i = 0; i < NUM; i++){
 		a.push_back(i);
