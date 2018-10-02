@@ -14,24 +14,94 @@
 #include <UART/UART0.h>
 #include <Cmt/Cmt0.h>
 
-void interrupt_function_4(Led *led, DipSwitch *dip_switch, UART *uart_print){
-	static bool led_state = false;
-	led_state = !led_state;
-	led->output(led_state);
-	uart_print->Printf("change, world! :%x\n", dip_switch->read_dip_switch());
+#include <Can/Can1.h>
+#include <CanMessage/CanSendMessage.h>
+#include <CanMessage/CanRecieveMessage.h>
+
+class TestCanSendMessage : public CanSendMessage
+{
+public:
+	TestCanSendMessage(Can *can, uint32_t id, Can::MailBox mail_box)
+		: CanSendMessage(can, id, mail_box, 1), data_(0)
+	{}
+	virtual ~TestCanSendMessage(){}
+
+	void set_data(uint8_t data){ data_ = data; }
+private:
+	virtual void set_send_data(){ send_data_[0] = data_; }
+	uint8_t data_;
+};
+
+class TestCanRecieveMessage : public CanRecieveMessage
+{
+public:
+	TestCanRecieveMessage(Can *can, uint32_t id, Can::MailBox mail_box)
+		: CanRecieveMessage(can, id, mail_box), data_(0)
+	{
+		attach_interrupt(std::bind(&TestCanRecieveMessage::interrupt_set_data, this));
+	}
+	virtual ~TestCanRecieveMessage(){}
+
+	void interrupt_set_data(){ data_ = recieve_data_[0]; }
+
+	uint8_t read_data(){ return data_; }
+
+private:
+	uint8_t data_;
+};
+
+const Can::MailBox MY_MAILBOX = Can::MailBox::MailBox0;
+const Can::MailBox OTHER_MAILBOX = Can::MailBox::MailBox1;
+
+void interrupt_can_send(TestCanSendMessage *can_send_message,
+						DipSwitch *dip_switch, UART *uart_print)
+{
+	uint8_t data = dip_switch->read_dip_switch();
+	can_send_message->set_data(data);
+	can_send_message->send_message();
+	uart_print->Printf("can_send:0x%02x\n", data);
+}
+
+void interrupt_can_recieve(	TestCanRecieveMessage *can_recieve_message,
+							Led *led1, Led *led2, Led *led3, Led *led4,
+							UART *uart_print
+							)
+{
+	uint8_t data = can_recieve_message->read_data();
+	led1->output((data >> 3) & 0x01);
+	led2->output((data >> 2) & 0x01);
+	led3->output((data >> 1) & 0x01);
+	led4->output((data >> 0) & 0x01);
+	uart_print->Printf("can_recieve:0x%02x\n", data);
 }
 
 int main(void) {
 	setup();
 
-	Led *led = new Led1();
+	Led *led1 = new Led1();
+	Led *led2 = new Led2();
+	Led *led3 = new Led3();
+	Led *led4 = new Led4();
+
 	DipSwitch *dip_switch = new DipSwitch();
 
 	UART *uart_print;
 	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
 
+	uint32_t can_tx_id = dip_switch->read_dip_switch() & 0x0F;
+	uint32_t can_rx_id = (~can_tx_id) & 0x0F;
+
+	Can *can = new Can1();
+	TestCanSendMessage *can_send_message = new TestCanSendMessage(can, can_tx_id, MY_MAILBOX);
+	TestCanRecieveMessage *can_recieve_message = new TestCanRecieveMessage(can, can_rx_id, OTHER_MAILBOX);
+
+	uart_print->Printf("can_tx_id:0x%02x" "\t" "can_rx_id:0x%02x" "\n", can_tx_id, can_rx_id);
+
 	Cmt *cmt = new Cmt0(1e-4);
-	cmt->attach_interrupt(std::bind(interrupt_function_4, led, dip_switch, uart_print), 0.5);
+
+	cmt->attach_interrupt(std::bind(interrupt_can_send, can_send_message, dip_switch, uart_print), 1e-1);
+	can_recieve_message->attach_interrupt(std::bind(interrupt_can_recieve, can_recieve_message, led1, led2, led3, led4, uart_print));
+
 	cmt->run();
 
 	uart_print->Printf("hello, world!\n");
