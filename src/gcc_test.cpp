@@ -15,17 +15,12 @@
 #include <Led/Led.h>
 #include <UART/UART0.h>
 #include <Cmt/Cmt0.h>
-#include <Can/Can1.h>
-#include <Motor62T/Motor62T.h>
 #include <functional>
 #include <interrupt_handlers.h>
 
 extern std::function< void() > int_excep_sci0_rxi0;
 
 #define NUM 10
-
-const uint32_t CAN_ID = 0x21;
-const Can::MailBox MAIL_BOX = Can::MailBox::MailBox0;
 
 UART *uart_print;
 Led2 led2;
@@ -51,11 +46,6 @@ void interrupt_function_4(Led *led){
 	uart_print->Printf("change, world!\n");
 }
 
-void interrupt_function_5(Motor *motor)
-{
-	motor->rotate(1.0);
-}
-
 int main(void) {
 	setup();
 	std::vector<int> a;
@@ -69,12 +59,8 @@ int main(void) {
 	uart_print->detach_rx_interrupt(function_number);
 	uart_print->enable_rx_interrupt();
 
-	Can *can = new Can1();
-	Motor62T *motor = new Motor62T(can, CAN_ID, MAIL_BOX, 8192);
-
 	Cmt *cmt = new Cmt0(1e-4);
 	cmt->attach_interrupt(std::bind(interrupt_function_4, led), 0.5);
-	cmt->attach_interrupt(std::bind(interrupt_function_5, motor), 0.01);
 	cmt->run();
 
 	for(auto i = 0; i < NUM; i++){
