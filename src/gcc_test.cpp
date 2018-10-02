@@ -20,26 +20,6 @@
 
 extern std::function< void() > int_excep_sci0_rxi0;
 
-#ifdef CPPAPP
-//Initialize global constructors
-extern void __main()
-{
-  static int initialized;
-  if (! initialized)
-    {
-      typedef void (*pfunc) ();
-      extern pfunc __ctors[];
-      extern pfunc __ctors_end[];
-      pfunc *p;
-
-      initialized = 1;
-      for (p = __ctors_end; p > __ctors; )
-    (*--p) ();
-
-    }
-}
-#endif 
-
 #define NUM 10
 
 UART *uart_print;
