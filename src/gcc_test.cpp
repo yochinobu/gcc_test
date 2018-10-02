@@ -13,6 +13,7 @@
 #include <array>
 #include <TUT_BasicSource/header/setup.h>
 #include <Led/Led.h>
+#include <DipSwitch/DipSwitch.h>
 #include <UART/UART0.h>
 #include <Cmt/Cmt0.h>
 #include <functional>
@@ -38,12 +39,12 @@ void interrupt_function_3(){
 	uart_print->Printf("again, world 3. No:%d\n",count++);
 }
 
-void interrupt_function_4(Led *led){
+void interrupt_function_4(Led *led, DipSwitch *dip_switch){
 	static bool led_state = false;
 	led_state = !led_state;
 	led->output(led_state);
 	led2.output(!led_state);
-	uart_print->Printf("change, world!\n");
+	uart_print->Printf("change, world! :%x\n", dip_switch->read_dip_switch());
 }
 
 int main(void) {
@@ -52,6 +53,7 @@ int main(void) {
 	int b[NUM];
 	std::array<int, NUM> c;
 	Led *led = new Led1();
+	DipSwitch *dip_switch = new DipSwitch();
 	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
 	uart_print->attach_rx_interrupt(interrupt_function_1);
 	int function_number = uart_print->attach_rx_interrupt(interrupt_function_2);
@@ -60,7 +62,7 @@ int main(void) {
 	uart_print->enable_rx_interrupt();
 
 	Cmt *cmt = new Cmt0(1e-4);
-	cmt->attach_interrupt(std::bind(interrupt_function_4, led), 0.5);
+	cmt->attach_interrupt(std::bind(interrupt_function_4, led, dip_switch), 0.5);
 	cmt->run();
 
 	for(auto i = 0; i < NUM; i++){
