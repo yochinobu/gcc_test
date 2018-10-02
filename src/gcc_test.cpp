@@ -14,9 +14,7 @@
 #include <UART/UART0.h>
 #include <Cmt/Cmt0.h>
 
-UART *uart_print;
-
-void interrupt_function_4(Led *led, DipSwitch *dip_switch){
+void interrupt_function_4(Led *led, DipSwitch *dip_switch, UART *uart_print){
 	static bool led_state = false;
 	led_state = !led_state;
 	led->output(led_state);
@@ -29,10 +27,11 @@ int main(void) {
 	Led *led = new Led1();
 	DipSwitch *dip_switch = new DipSwitch();
 
+	UART *uart_print;
 	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
 
 	Cmt *cmt = new Cmt0(1e-4);
-	cmt->attach_interrupt(std::bind(interrupt_function_4, led, dip_switch), 0.5);
+	cmt->attach_interrupt(std::bind(interrupt_function_4, led, dip_switch, uart_print), 0.5);
 	cmt->run();
 
 	uart_print->Printf("hello, world!\n");
