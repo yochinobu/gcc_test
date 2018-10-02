@@ -23,6 +23,7 @@ extern std::function< void() > int_excep_sci0_rxi0;
 #define NUM 10
 
 UART *uart_print;
+Led2 led2;
 
 void interrupt_function_1(){
 	uart_print->Printf("again, world 1\n");
@@ -41,6 +42,7 @@ void interrupt_function_4(Led *led){
 	static bool led_state = false;
 	led_state = !led_state;
 	led->output(led_state);
+	led2.output(!led_state);
 	uart_print->Printf("change, world!\n");
 }
 
