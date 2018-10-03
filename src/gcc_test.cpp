@@ -8,72 +8,104 @@
 /*                                                             */
 /***************************************************************/
 
-#include <iodefine.h>
-#include <vector>
-#include <array>
 #include <TUT_BasicSource/header/setup.h>
 #include <Led/Led.h>
+#include <DipSwitch/DipSwitch.h>
 #include <UART/UART0.h>
 #include <Cmt/Cmt0.h>
-#include <functional>
-#include <interrupt_handlers.h>
 
-extern std::function< void() > int_excep_sci0_rxi0;
+#include <Can/Can1.h>
+#include <CanMessage/CanSendMessage.h>
+#include <CanMessage/CanRecieveMessage.h>
 
-#define NUM 10
+class TestCanSendMessage : public CanSendMessage
+{
+public:
+	TestCanSendMessage(Can *can, uint32_t id, Can::MailBox mail_box)
+		: CanSendMessage(can, id, mail_box, 1), data_(0)
+	{}
+	virtual ~TestCanSendMessage(){}
 
-UART *uart_print;
-Led2 led2;
+	void set_data(uint8_t data){ data_ = data; }
+private:
+	virtual void set_send_data(){ send_data_[0] = data_; }
+	uint8_t data_;
+};
 
-void interrupt_function_1(){
-	uart_print->Printf("again, world 1\n");
+class TestCanRecieveMessage : public CanRecieveMessage
+{
+public:
+	TestCanRecieveMessage(Can *can, uint32_t id, Can::MailBox mail_box)
+		: CanRecieveMessage(can, id, mail_box), data_(0)
+	{
+		attach_interrupt(std::bind(&TestCanRecieveMessage::interrupt_set_data, this));
+	}
+	virtual ~TestCanRecieveMessage(){}
+
+	void interrupt_set_data(){ data_ = recieve_data_[0]; }
+
+	uint8_t read_data(){ return data_; }
+
+private:
+	uint8_t data_;
+};
+
+const Can::MailBox MY_MAILBOX = Can::MailBox::MailBox0;
+const Can::MailBox OTHER_MAILBOX = Can::MailBox::MailBox1;
+
+void interrupt_can_send(TestCanSendMessage *can_send_message,
+						DipSwitch *dip_switch, UART *uart_print)
+{
+	uint8_t data = dip_switch->read_dip_switch();
+	can_send_message->set_data(data);
+	can_send_message->send_message();
+	uart_print->Printf("can_send:0x%02x\n", data);
 }
 
-void interrupt_function_2(){
-	uart_print->Printf("again, world 2\n");
-}
-
-void interrupt_function_3(){
-	static int count = 0;
-	uart_print->Printf("again, world 3. No:%d\n",count++);
-}
-
-void interrupt_function_4(Led *led){
-	static bool led_state = false;
-	led_state = !led_state;
-	led->output(led_state);
-	led2.output(!led_state);
-	uart_print->Printf("change, world!\n");
+void interrupt_can_recieve(	TestCanRecieveMessage *can_recieve_message,
+							Led *led1, Led *led2, Led *led3, Led *led4,
+							UART *uart_print
+							)
+{
+	uint8_t data = can_recieve_message->read_data();
+	led1->output((data >> 3) & 0x01);
+	led2->output((data >> 2) & 0x01);
+	led3->output((data >> 1) & 0x01);
+	led4->output((data >> 0) & 0x01);
+	uart_print->Printf("can_recieve:0x%02x\n", data);
 }
 
 int main(void) {
 	setup();
-	std::vector<int> a;
-	int b[NUM];
-	std::array<int, NUM> c;
-	Led *led = new Led1();
+
+	Led *led1 = new Led1();
+	Led *led2 = new Led2();
+	Led *led3 = new Led3();
+	Led *led4 = new Led4();
+
+	DipSwitch *dip_switch = new DipSwitch();
+
+	UART *uart_print;
 	uart_print = new UART0(UART::B115200, UART::SCI_BUFFERSIZE);
-	uart_print->attach_rx_interrupt(interrupt_function_1);
-	int function_number = uart_print->attach_rx_interrupt(interrupt_function_2);
-	uart_print->attach_rx_interrupt(interrupt_function_3);
-	uart_print->detach_rx_interrupt(function_number);
-	uart_print->enable_rx_interrupt();
+
+	uint32_t can_tx_id = dip_switch->read_dip_switch() & 0x0F;
+	uint32_t can_rx_id = (~can_tx_id) & 0x0F;
+
+	Can *can = new Can1();
+	TestCanSendMessage *can_send_message = new TestCanSendMessage(can, can_tx_id, MY_MAILBOX);
+	TestCanRecieveMessage *can_recieve_message = new TestCanRecieveMessage(can, can_rx_id, OTHER_MAILBOX);
+
+	uart_print->Printf("can_tx_id:0x%02x" "\t" "can_rx_id:0x%02x" "\n", can_tx_id, can_rx_id);
 
 	Cmt *cmt = new Cmt0(1e-4);
-	cmt->attach_interrupt(std::bind(interrupt_function_4, led), 0.5);
+
+	cmt->attach_interrupt(std::bind(interrupt_can_send, can_send_message, dip_switch, uart_print), 1e-1);
+	can_recieve_message->attach_interrupt(std::bind(interrupt_can_recieve, can_recieve_message, led1, led2, led3, led4, uart_print));
+
 	cmt->run();
 
-	for(auto i = 0; i < NUM; i++){
-		a.push_back(i);
-		b[i] = a[i];
-		c[i] = a[i];
-	}
-
-	led->output(true);
 	uart_print->Printf("hello, world!\n");
-	uart_print->Printf("thank you, world!\n");
 
-	for(auto i = 0; i < 0; i++);
 
 	while(1) {
 
